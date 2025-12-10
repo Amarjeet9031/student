@@ -137,7 +137,7 @@ export default function Registration() {
         semesterFiles.forEach(file=>{ if(file) form.append("semesterMarksheets",file); });
 
         try{
-            const res=await fetch("https://student-8158.onrender.com/api/users/register",{ method:"POST", body:form });
+            const res=await fetch("https://student-college.onrender.com/api/users/register",{ method:"POST", body:form });
             const result=await res.json();
             if(result.success){ alert("Final Submission Successful!"); localStorage.removeItem("candidateData"); setFormData({firstName:"",lastName:"",fatherName:"",motherName:"",phoneNumber:"",email:"",dateOfBirth:"",category:"General"}); setSemesterFiles([null]); setSemesterErrors([""]); setStep(1); } 
             else{ alert("Something went wrong!"); }

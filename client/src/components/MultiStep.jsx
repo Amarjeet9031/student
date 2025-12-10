@@ -285,7 +285,7 @@ export default function Registration() {
         });
 
         try {
-            const response = await fetch("https://student-8158.onrender.com/api/students/register", {
+            const response = await fetch("https://student-college.onrender.com/api/students/register", {
                 method: "POST",
                 body: formPayload,
             });

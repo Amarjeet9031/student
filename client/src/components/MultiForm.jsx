@@ -59,7 +59,7 @@ export default function MultiDynamicForms() {
             return alert("Please fix errors before submitting");
         }
 
-        const res = await fetch("https://student-8158.onrender.com/api/forms/save-multiple", {
+        const res = await fetch("https://student-college.onrender.com/api/forms/save-multiple", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(forms),
