@@ -1,33 +1,25 @@
 import Student from "../models/studentModel.js";
-import { sendRegistrationEmail } from "../services/emailService.js";
+import { uploadToS3 } from "../utils/s3Upload.js";
 
 export const registerStudent = async (req, res) => {
   try {
     const {
-      firstName,
-      lastName,
-      fatherName,
-      motherName,
-      phoneNumber,
-      email,
-      dateOfBirth,
-      category
+      firstName, lastName, fatherName, motherName,
+      phoneNumber, email, dateOfBirth, category
     } = req.body;
 
     const files = req.files;
 
-    const requiredFiles = ["marksheet10", "marksheet12", "marksheetGrad", "marksheetSem", "resume"];
-    const missingFiles = requiredFiles.filter(
-      f => !files || !files[f] || files[f].length === 0
+    const marksheet10 = await uploadToS3(files.marksheet10[0], "marksheets");
+    const marksheet12 = await uploadToS3(files.marksheet12[0], "marksheets");
+    const marksheetGrad = await uploadToS3(files.marksheetGrad[0], "marksheets");
+
+    const marksheetSem = await Promise.all(
+      files.marksheetSem.map((f) => uploadToS3(f, "marksheets"))
     );
 
-    if (missingFiles.length > 0) {
-      return res.status(400).json({
-        message: `Missing required files: ${missingFiles.join(", ")}`
-      });
-    }
+    const resume = await uploadToS3(files.resume[0], "resumes");
 
-    // 🔥 IMPORTANT: STORE S3 URL NOT filename
     const student = new Student({
       firstName,
       lastName,
@@ -38,44 +30,23 @@ export const registerStudent = async (req, res) => {
       dateOfBirth,
       category,
       documents: {
-        marksheet10: files.marksheet10[0].location,  // S3 URL
-        marksheet12: files.marksheet12[0].location,
-        marksheetGrad: files.marksheetGrad[0].location,
-        marksheetSem: files.marksheetSem.map(f => f.location),
-        resume: files.resume[0].location,
+        marksheet10,
+        marksheet12,
+        marksheetGrad,
+        marksheetSem,
+        resume,
       },
     });
 
-    const savedStudent = await student.save();
-
-    await sendRegistrationEmail(email, firstName);
+    await student.save();
 
     res.status(201).json({
-      message: "Student registered successfully, email sent!",
-      student: savedStudent
+      message: "Student registered successfully!",
+      student
     });
 
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: "Server Error" });
-  }
-};
-
-export const getAllStudents = async (req, res) => {
-  try {
-    const students = await Student.find();
-    res.status(200).json(students);
-  } catch (err) {
-    res.status(500).json({ message: "Server Error" });
-  }
-};
-
-export const getStudentById = async (req, res) => {
-  try {
-    const student = await Student.findById(req.params.id);
-    if (!student) return res.status(404).json({ message: "Student not found" });
-    res.status(200).json(student);
-  } catch (err) {
-    res.status(500).json({ message: "Server Error" });
+    res.status(500).json({ message: "Server Error", error: err.message });
   }
 };
