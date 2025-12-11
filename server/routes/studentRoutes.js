@@ -19,4 +19,6 @@ router.post(
 router.get("/", getAllStudents);
 router.get("/:id", getStudentById);
 
+
+
 export default router;
